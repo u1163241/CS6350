@@ -84,15 +84,6 @@ def processData(data):
     return attributes, labels
 
 
-def mostCommonLabel(Label):
-    max = -1
-    maxIndex = 0
-    for i in range(len(Label)):  # return most commom label
-        current = list(Label.values())[i]
-        maxIndex, max = ((maxIndex, max), (i, current))[current > max]
-    return {list(Label)[maxIndex]: max}
-
-
 def calculation(labels, KEY):
     total = 0
     returnNumber = 0
@@ -144,9 +135,10 @@ def predictionError(Node, data, header):
 
 def getPrediction(node, line, header):
     current = list(node.label.keys())[0]
+    currentLables = list(node.label.values())[0]
     index = -1
-    if len(node.branch) == 0:  # the prediction
-        return current
+    if len(currentLables.keys()) == 1:  # the prediction
+        return list(currentLables.keys())[0]
     elif current in header:
         index = header.index(current)
         if node.contain(line[index]):
@@ -154,11 +146,18 @@ def getPrediction(node, line, header):
         else:  # most common value
             max = float("-inf")
             returnLabel = ""
-            label = list(node.label.values())[0]
-            for currentLable, currentValue in label.items():
+            for currentLable, currentValue in currentLables.items():
                 if currentValue > max:
-                    currentValue = max
+                    max = currentValue
                     returnLabel = currentLable
-            return getPrediction(Node({returnLabel: currentValue}), line, header)
+            return returnLabel
+    elif len(node.branch) < 1:
+        max = float("-inf")
+        returnLabel = ""
+        for currentLable, currentValue in currentLables.items():
+            if currentValue > max:
+                max = currentValue
+                returnLabel = currentLable
+        return returnLabel
     else:
         return getPrediction(node.branch[0], line, header)
