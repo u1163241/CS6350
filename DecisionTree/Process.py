@@ -13,7 +13,7 @@ class Node:
 
     def contain(self, value):
         for node in self.branch:
-            if node.label == value:
+            if list(node.label.keys())[0] == value:
                 return node
         return False
 
@@ -143,24 +143,22 @@ def predictionError(Node, data, header):
 
 
 def getPrediction(node, line, header):
-    current = node.label
+    current = list(node.label.keys())[0]
     index = -1
     if len(node.branch) == 0:  # the prediction
-        return list(current.keys())[0]
+        return current
     elif current in header:
         index = header.index(current)
         if node.contain(line[index]):
             return getPrediction(node.contain(line[index]), line, header)
-        else:  # use most common value       FIX！！！！！
-            maximum = float("-inf")
-            label = ""
-            for i in range(len(node.branch)):
-                currentLabel = node.branch[i]
-                print(node.branch[i].branch[0].label)
-                current = list(node.branch[i].branch[0].label.values())[0]
-                label, maximum = ((label, maximum), (currentLabel, current))[
-                    current > maximum
-                ]
-            return getPrediction(label, line, header)
+        else:  # most common value
+            max = float("-inf")
+            returnLabel = ""
+            label = list(node.label.values())[0]
+            for currentLable, currentValue in label.items():
+                if currentValue > max:
+                    currentValue = max
+                    returnLabel = currentLable
+            return getPrediction(Node({returnLabel: currentValue}), line, header)
     else:
         return getPrediction(node.branch[0], line, header)

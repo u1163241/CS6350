@@ -7,9 +7,8 @@ def ID3(S, Attributes, Label, Depth, KEY):
     elif len(Attributes) < 1 or Depth == 0:  # if Attributes empty
         return Node(mostCommonLabel(Label))
     bestAttribute = bestToSplit(Label, Attributes, KEY)
-    root = Node(Attributes[bestAttribute])  # current root node
     childList = []  # branch
-    root.label = bestAttribute  # current label
+    root = Node({bestAttribute: Label})  # current root node
     root.branch = childList
     for attribute in Attributes[bestAttribute]:  # split each attribute value
         subData = []
@@ -23,7 +22,7 @@ def ID3(S, Attributes, Label, Depth, KEY):
                     line.remove(attribute)
                     subData.append(line)
         subAttributes, subLabels = processData(subData)  # process new data
-        child = Node(attribute)
+        child = Node({attribute: subLabels})
         childList.append(child)  # connect each child node to current
         temp = []  # continue branch on child node
         child.branch = temp
@@ -32,12 +31,12 @@ def ID3(S, Attributes, Label, Depth, KEY):
 
 
 # set up
-version = "TENNIS"
+version = "CAR"
 data, testdata = getData(version)
 header = getHeader(version)
 data.insert(0, header)
 attributes, labels = processData(data)
-# for i in range(1, 7):
-Root = ID3(data, attributes, labels, 5, "IG")
-print(Root)
-print(predictionError(Root, testdata, header))
+for i in range(1, 7):
+    Root = ID3(data, attributes, labels, i, "ME")
+    # print(Root)
+    print(predictionError(Root, testdata, header))
