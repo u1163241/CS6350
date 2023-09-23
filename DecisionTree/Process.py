@@ -7,14 +7,24 @@ class Node:
         self.label = lable
         self.branch = {}
 
+    def __str__(self) -> str:
+        printNode(self)
+        return ""
+
+    def contain(self, value):
+        for node in self.branch:
+            if node.label == value:
+                return node
+        return False
+
 
 def printNode(root: Node, level=0):
-    print("\t" * level + root.label)
+    print("\t" * level + str(root.label))
     for child in root.branch:
         printNode(child, level + 1)
 
 
-def getData(path: str):
+def getDataFromPath(path: str):
     data = []
     with open(
         os.path.join(os.path.dirname(os.path.abspath(__file__)), path), "r"
@@ -23,6 +33,24 @@ def getData(path: str):
             terms = line.strip().split(",")
             data.append(terms)
     return data
+
+
+def getHeader(KEY):
+    if KEY == "CAR":
+        return ["buying", "maint", "doors", "persons", "lug_boot", "safety", "label"]
+    if KEY == "TENNIS":
+        return ["Outlook", "Temperature", "Humidity", "Wind", "Play Tennis"]
+
+
+def getData(KEY):
+    if KEY == "CAR":
+        return getDataFromPath("DataSets/car-4/train.csv"), getDataFromPath(
+            "DataSets/car-4/test.csv"
+        )
+    if KEY == "TENNIS":
+        return getDataFromPath("DataSets/train.csv"), getDataFromPath(
+            "DataSets/test.csv"
+        )
 
 
 def processData(data):
@@ -56,42 +84,83 @@ def processData(data):
     return attributes, labels
 
 
-def mostCommonLabelIndex(Label):
+def mostCommonLabel(Label):
     max = -1
     maxIndex = 0
     for i in range(len(Label)):  # return most commom label
         current = list(Label.values())[i]
         maxIndex, max = ((maxIndex, max), (i, current))[current > max]
-    return maxIndex
+    return {list(Label)[maxIndex]: max}
 
 
-def Entropy(labels, KEY):
+def calculation(labels, KEY):
     total = 0
     returnNumber = 0
-    min = float("inf")
+    minority = float("inf")
     for count in labels.values():
         total += count
     for count in labels.values():
         if KEY == "IG":
             returnNumber -= (count / total) * log2(count / total)
         if KEY == "ME":
-            returnNumber += (count / total) * (count / total)
+            minority = min(minority, count)
+            returnNumber = minority / total
+            if returnNumber == 1:
+                returnNumber = 0
+        if KEY == "GI":
+            returnNumber += (count / total) ** 2
+    if KEY == "GI":
+        returnNumber = 1 - returnNumber
     return total, returnNumber
 
 
-def IG(labels, attributes, KEY):
-    total, totalEntropy = Entropy(labels, KEY)
-    sumEntropy = 0
+def purity(labels, attributes, KEY):
+    total, totalCalculation = calculation(labels, KEY)
+    sumPurity = 0
     for attribute in attributes:
-        subTotal, subEntropy = Entropy(attributes[attribute], KEY)
-        sumEntropy += (subTotal / total) * subEntropy
-    return totalEntropy - sumEntropy
+        subTotal, subPurity = calculation(attributes[attribute], KEY)
+        sumPurity += (subTotal / total) * subPurity
+    return totalCalculation - sumPurity
 
 
 def bestToSplit(labels, attributes, KEY):
     best = ""
-    max = 0
+    max = float("-inf")
     for attribute in attributes:
-        current = IG(labels, attributes[attribute], KEY)
-        best, max = ((best, max), (attribute, current))[current >= max]
+        current = round(purity(labels, attributes[attribute], KEY), 3)
+        best, max = ((best, max), (attribute, current))[current > max]
     return best
+
+
+def predictionError(Node, data, header):
+    count = 0
+    for line in data:
+        prediction = getPrediction(Node, line, header)
+        actual = line[len(line) - 1]
+        if prediction != actual:
+            count += 1
+    return count / len(data)
+
+
+def getPrediction(node, line, header):
+    current = node.label
+    index = -1
+    if len(node.branch) == 0:  # the prediction
+        return list(current.keys())[0]
+    elif current in header:
+        index = header.index(current)
+        if node.contain(line[index]):
+            return getPrediction(node.contain(line[index]), line, header)
+        else:  # use most common value       FIX！！！！！
+            maximum = float("-inf")
+            label = ""
+            for i in range(len(node.branch)):
+                currentLabel = node.branch[i]
+                print(node.branch[i].branch[0].label)
+                current = list(node.branch[i].branch[0].label.values())[0]
+                label, maximum = ((label, maximum), (currentLabel, current))[
+                    current > maximum
+                ]
+            return getPrediction(label, line, header)
+    else:
+        return getPrediction(node.branch[0], line, header)
