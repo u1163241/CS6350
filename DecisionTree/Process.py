@@ -203,3 +203,21 @@ def processBank(bankData):
                 line[processIndex[i]] = "above"
             else:
                 line[processIndex[i]] = "below"
+
+
+def unknownProcess(data):
+    majorityList = []
+    count = []
+    for line in data:
+        current = line[15]
+        if current != "unknown":
+            if current not in majorityList:
+                majorityList.append(current)
+                count.append(1)
+            else:
+                count[majorityList.index(current)] += 1
+    majority = majorityList[count.index(max(count))]
+    for line in data:
+        current = line[15]
+        if current == "unknown":
+            line[15] = majority

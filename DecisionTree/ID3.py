@@ -30,10 +30,14 @@ def ID3(S, Attributes, Label, Depth, KEY):
 
 # set up
 version = "BANK"
+unknown = "Y"
 data, testdata = getData(version)
 if version == "BANK":
     processBank(data)
     processBank(testdata)
+if unknown == "Y":
+    unknownProcess(data)
+    unknownProcess(testdata)
 traindata = data.copy()
 header = getHeader(version)
 data.insert(0, header)
