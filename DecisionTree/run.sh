@@ -1,3 +1,3 @@
 #!/bin/zsh
 chmod +x run.sh
-python ID3.py
+python3 ID3.py
