@@ -48,9 +48,9 @@ while True:
         if unknown != "YES" and unknown != "NO":
             print("Wrong input, try again.\n")
             continue
-    if unknown == "YES":
-        unknownProcess(data)
-        unknownProcess(testdata)
+        if unknown == "YES":
+            unknownProcess(data)
+            unknownProcess(testdata)
     traindata = data.copy()
     header = getHeader(version)
     data.insert(0, header)
