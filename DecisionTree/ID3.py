@@ -29,14 +29,16 @@ def ID3(S, Attributes, Label, Depth, KEY):
 
 
 # set up
-version = "CAR"
+version = "BANK"
 data, testdata = getData(version)
+if version == "BANK":
+    processBank(data)
+    processBank(testdata)
 traindata = data.copy()
 header = getHeader(version)
 data.insert(0, header)
 attributes, labels = processData(data)
-Root = ID3(data, attributes, labels, 4, "IG")
-for i in range(1, 7):
-    Root = ID3(data, attributes, labels, i, "IG")
+for i in range(1, 17):
+    Root = ID3(data, attributes, labels, i, "GI")
     # print(Root)
     print(predictionError(Root, testdata, header))

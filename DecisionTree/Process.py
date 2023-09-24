@@ -1,4 +1,5 @@
 import os
+import statistics
 from math import log2
 
 
@@ -40,6 +41,26 @@ def getHeader(KEY):
         return ["buying", "maint", "doors", "persons", "lug_boot", "safety", "label"]
     if KEY == "TENNIS":
         return ["Outlook", "Temperature", "Humidity", "Wind", "Play Tennis"]
+    if KEY == "BANK":
+        return [
+            "age",
+            "job",
+            "marital",
+            "education",
+            "default",
+            "balance",
+            "housing",
+            "loan",
+            "contact",
+            "day",
+            "month",
+            "duration",
+            "campaign",
+            "pdays",
+            "previous",
+            "outcome",
+            "label",
+        ]
 
 
 def getData(KEY):
@@ -50,6 +71,10 @@ def getData(KEY):
     if KEY == "TENNIS":
         return getDataFromPath("DataSets/train.csv"), getDataFromPath(
             "DataSets/test.csv"
+        )
+    if KEY == "BANK":
+        return getDataFromPath("DataSets/bank-4/train.csv"), getDataFromPath(
+            "DataSets/bank-4/test.csv"
         )
 
 
@@ -118,7 +143,7 @@ def bestToSplit(labels, attributes, KEY):
     best = ""
     max = float("-inf")
     for attribute in attributes:
-        current = round(purity(labels, attributes[attribute], KEY), 3)
+        current = purity(labels, attributes[attribute], KEY)
         best, max = ((best, max), (attribute, current))[current > max]
     return best
 
@@ -161,3 +186,20 @@ def getPrediction(node, line, header):
         return returnLabel
     else:
         return getPrediction(node.branch[0], line, header)
+
+
+def processBank(bankData):
+    processIndex = [0, 5, 9, 11, 12, 13, 14]
+    numList = [[], [], [], [], [], [], []]
+    medianList = [[], [], [], [], [], [], []]
+    for line in bankData:
+        for i in range(len(processIndex)):
+            numList[i].append(float(line[processIndex[i]]))
+    for i in range(len(numList)):
+        medianList[i] = statistics.median(numList[i])
+    for line in bankData:
+        for i in range(len(processIndex)):
+            if float(line[processIndex[i]]) >= medianList[i]:
+                line[processIndex[i]] = "above"
+            else:
+                line[processIndex[i]] = "below"
