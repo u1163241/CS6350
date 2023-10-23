@@ -68,9 +68,9 @@ i = 1
 while norm > tolerance:
     line = random.choice(data)
     newWeight = getNewWeight(weightList, line, r, b)
+    b = getNewB(line, weightList, r, b)
     norm = getNorm(weightList, newWeight)
     weightList = newWeight
-    b = getNewB(line, weightList, r, b)
     cost = getCost(data, weightList, b)
     print(str(i) + ": " + str(cost))
     r = 0.5 * r
