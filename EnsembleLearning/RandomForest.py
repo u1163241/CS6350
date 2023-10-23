@@ -243,16 +243,22 @@ def getBaggingPrediction(rootList, line, header):
 
 def RandTreeLearn(S, Attributes, Label, Depth, KEY):
     bestAttribute = ""
-    if len(Attributes) > 5:
+    if len(Attributes) > 2:
         randomAttributes = {}
-        ramdomLable = {}
+        randomLable = {}
         AttributesCopy = Attributes.copy()
-        for i in range(5):
+        for i in range(2):
             pick = random.randint(0, len(AttributesCopy) - 1)
             newRandom = AttributesCopy[list(AttributesCopy.keys())[pick]]
             randomAttributes[list(AttributesCopy.keys())[pick]] = newRandom
             del AttributesCopy[list(AttributesCopy.keys())[pick]]
-        bestAttribute = bestToSplit(ramdomLable, randomAttributes, KEY)
+        for attribute in randomAttributes.values():
+            for label in attribute.values():
+                for key, value in label.items():
+                    if key not in randomLable:
+                        randomLable[key] = 0
+                    randomLable[key] += value
+        bestAttribute = bestToSplit(randomLable, randomAttributes, KEY)
     else:
         bestAttribute = bestToSplit(Label, Attributes, KEY)
     childList = []  # branch
@@ -291,7 +297,7 @@ traindata = data.copy()
 header = getHeader(version)
 data.insert(0, header)
 rootList = []
-for i in range(500):
+for i in range(100):
     sample = []
     sample.insert(0, header)
     for i in range(len(data) - 1):
@@ -301,6 +307,6 @@ for i in range(500):
     Root = RandTreeLearn(sample, attributes, labels, 16, "IG")
     rootList.append(Root)
 
-error = predictionError(data[1:], header, rootList)
+# error = predictionError(data[1:], header, rootList)
 testError = predictionError(testdata, header, rootList)
-print(error)
+print(testError)
