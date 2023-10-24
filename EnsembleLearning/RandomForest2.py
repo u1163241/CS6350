@@ -2,6 +2,7 @@ import os
 import statistics
 from math import log2
 import random
+import math
 
 
 class Node:
@@ -241,13 +242,24 @@ def getBaggingPrediction(rootList, line, header):
     return returnVote
 
 
-def RandTreeLearn(S, Attributes, Label, Depth, KEY, featureSize):
+def listAverage(l):
+    return sum(l) / len(l)
+
+
+def getVariance(predictionList, average, count):
+    total = 0
+    for prediction in predictionList:
+        total += (prediction - average) ** 2
+    return math.sqrt(total / count)
+
+
+def RandTreeLearn(S, Attributes, Label, Depth, KEY):
     bestAttribute = ""
-    if len(Attributes) > featureSize:
+    if len(Attributes) > 2:
         randomAttributes = {}
         randomLable = {}
         AttributesCopy = Attributes.copy()
-        for i in range(featureSize):
+        for i in range(2):
             pick = random.randint(0, len(AttributesCopy) - 1)
             newRandom = AttributesCopy[list(AttributesCopy.keys())[pick]]
             randomAttributes[list(AttributesCopy.keys())[pick]] = newRandom
@@ -283,57 +295,82 @@ def RandTreeLearn(S, Attributes, Label, Depth, KEY, featureSize):
             temp = []  # continue branch on child node
             child.branch = temp
             temp.append(
-                RandTreeLearn(
-                    subData, subAttributes, subLabels, Depth - 1, KEY, featureSize
-                )
+                RandTreeLearn(subData, subAttributes, subLabels, Depth - 1, KEY)
             )
     return root
 
 
-# set up
-version = "BANK"
-data, testdata = getData(version)
-processBank(data)
-processBank(testdata)
-header = getHeader(version)
-data.insert(0, header)
-
-
 def main():
-    while True:
-        try:
-            print("Enter exit to exit")
-            print("Enter: Start interger, End integer, Step.")
-            get = input("Example: 0, 10, 1 \n")
-            if get.upper() == "EXIT":
-                exit(0)
-            inputData = get.strip().split(",")
-            start = int(inputData[0])
-            end = int(inputData[1]) + 1
-            step = int(inputData[2])
-            featureSize = input("Feature Size, pick from 2,4,6\n")
-            featureSize = int(featureSize)
-            if featureSize != 2 and featureSize != 4 and featureSize != 6:
-                print("wrong feature size")
-                continue
-        except Exception:
-            print("input not valid \n")
-            continue
-        for T in range(start, end, step):
-            rootList = []
+    # set up
+    version = "BANK"
+    data, testdata = getData(version)
+    processBank(data)
+    processBank(testdata)
+    header = getHeader(version)
+    data.insert(0, header)
 
-            for i in range(T):
-                sample = []
-                sample.insert(0, header)
-                for i in range(len(data) - 1):
-                    pick = random.randint(1, len(data) - 2)
-                    sample.append(data[pick])
-                attributes, labels = processData(sample)
-                Root = RandTreeLearn(sample, attributes, labels, 16, "IG", featureSize)
-                rootList.append(Root)
+    treeList = []
+    forestList = []
 
-            error = predictionError(data[1:], header, rootList)
-            print(str(T) + " Training Error: " + str(error))
-            testError = predictionError(testdata, header, rootList)
-            print(str(T) + " Test Error: " + str(testError))
-        break
+    for T in range(0, 10):
+        rootList = []
+        for i in range(100):
+            sample = []
+            dataCopy = data.copy()
+            sample.insert(0, header)
+            for i in range(1000):
+                pick = random.randint(1, len(dataCopy) - 2)
+                sample.append(dataCopy[pick])
+                dataCopy.remove(dataCopy[pick])
+            attributes, labels = processData(sample)
+            Root = RandTreeLearn(sample, attributes, labels, 16, "IG")
+            rootList.append(Root)
+        forestList.append(rootList)
+        treeList.append(rootList[0])
+
+    treeBiasList = []
+    forestBiasList = []
+    treeVarianceList = []
+    forestVarianceList = []
+    for line in dataCopy:
+        treePredictionList = []
+        forestPredictionList = []
+        for tree in treeList:
+            if getPrediction(tree, line, header) == "yes":
+                treePredictionList.append(1)
+            else:
+                treePredictionList.append(0)
+        for forest in forestList:
+            if getBaggingPrediction(forest, line, header) == "yes":
+                forestPredictionList.append(1)
+            else:
+                forestPredictionList.append(0)
+        temp = 0
+        if line[-1] == "yes":
+            temp = 1
+        treeBiasList.append((listAverage(treePredictionList) - temp) ** 2)
+        treeVarianceList.append(
+            getVariance(treePredictionList, listAverage(treePredictionList), 10)
+        )
+        forestBiasList.append((listAverage(forestPredictionList) - temp) ** 2)
+        forestVarianceList.append(
+            getVariance(forestPredictionList, listAverage(forestPredictionList), 10)
+        )
+    print("Single trees average bias term: " + str(listAverage(treeBiasList)))
+    print("Single trees average variance term: " + str(listAverage(treeVarianceList)))
+    print(
+        "Single trees average general squared error: "
+        + str(listAverage(treeBiasList) + listAverage(treeVarianceList))
+    )
+    print(
+        "Random forest predictors average bias term: "
+        + str(listAverage(forestBiasList))
+    )
+    print(
+        "Random forest predictors average variance term: "
+        + str(listAverage(forestVarianceList))
+    )
+    print(
+        "Random forest predictors average general squared error: "
+        + str(listAverage(forestBiasList) + listAverage(forestVarianceList))
+    )

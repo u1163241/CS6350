@@ -2,3 +2,9 @@
 
 ## Decision Tree
 ### Use ./run.sh to start then follow the instructions.
+
+## Ensemble Learning
+### Use ./run.sh to start then follow the instructions.
+
+## Linear Regression
+### Use ./run.sh to start then follow the instructions.

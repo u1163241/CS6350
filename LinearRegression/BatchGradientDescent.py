@@ -67,27 +67,30 @@ def getCost(data, weightList, b):
     return cost
 
 
-data = getDataFromPath("DataSets/concrete/train.csv")
-testData = getDataFromPath("DataSets/concrete/test.csv")
-tolerance = 0.000001
-weightList = [0] * (len(data[0]) - 1)
-r = 0.02
-b = 0
-norm = 1
-i = 1
-while norm > tolerance:
-    gradientList = getGradientList(data, weightList, b)
-    newWeight = getNewWeight(weightList, gradientList, r)
-    b = getNewB(data, weightList, r, b)
-    norm = getNorm(weightList, newWeight)
-    weightList = newWeight
-    cost = getCost(data, weightList, b)
-    print(str(i) + ": " + str(cost))
-    r = 0.5 * r
-    i = i + 1
-    # print(newWeight)
+def main():
+    data = getDataFromPath("DataSets/concrete/train.csv")
+    testData = getDataFromPath("DataSets/concrete/test.csv")
+    tolerance = 0.000001
+    weightList = [0] * (len(data[0]) - 1)
+    r = 0.01
+    b = 0
+    norm = 1
+    i = 1
+    while norm > tolerance:
+        gradientList = getGradientList(data, weightList, b)
+        newWeight = getNewWeight(weightList, gradientList, r)
+        b = getNewB(data, weightList, r, b)
+        norm = getNorm(weightList, newWeight)
+        weightList = newWeight
+        cost = getCost(data, weightList, b)
+        print(str(i) + ": " + str(cost))
+        r = 0.5 * r
+        i = i + 1
+        # print(newWeight)
 
-print("Learned b: " + str(b))
-print("Learned weight vector: " + str(weightList))
-print("Learning rate r chosen: 0.02")
-print("Cost function value of the test data: " + str(getCost(testData, weightList, b)))
+    print("Learned b: " + str(b))
+    print("Learned weight vector: " + str(weightList))
+    print("Learning rate r chosen: 0.01")
+    print(
+        "Cost function value of the test data: " + str(getCost(testData, weightList, b))
+    )

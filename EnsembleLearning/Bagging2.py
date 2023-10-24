@@ -1,6 +1,8 @@
-import math
 import os
 import statistics
+from math import log2
+import random
+import math
 
 
 class Node:
@@ -78,6 +80,37 @@ def getData(KEY):
         )
 
 
+def processData(data):
+    attributes = {}
+    labels = {}
+    for row in range(len(data)):
+        for col in range(len(data[row])):
+            cell = data[row][col]
+            if row == 0:  # header, get each atrribute name
+                if col != len(data[row]) - 1:
+                    attributes.update({cell: {}})  # attribute names
+            else:
+                labelValue = data[row][len(data[row]) - 1]  # current label value
+                if col == len(data[row]) - 1:  # update label
+                    if labelValue in labels:
+                        labels.update({labelValue: labels[labelValue] + 1})
+                    else:
+                        labels.update({labelValue: 1})
+                else:  # update attribute
+                    attribute = attributes[data[0][col]]
+                    if (
+                        cell in attribute and labelValue in attribute[cell]
+                    ):  # update exist label value
+                        attribute[cell].update(
+                            {labelValue: attribute[cell][labelValue] + 1}
+                        )
+                    elif cell in attribute:  # add new label value
+                        attribute[cell].update({labelValue: 1})
+                    else:  # add new attribute value
+                        attribute.update({cell: {labelValue: 1}})
+    return attributes, labels
+
+
 def calculation(labels, KEY):
     total = 0
     returnNumber = 0
@@ -86,13 +119,13 @@ def calculation(labels, KEY):
         total += count
     for count in labels.values():
         if KEY == "IG":
-            returnNumber -= (count / total) * math.log2(count / total)
-        elif KEY == "ME":
+            returnNumber -= (count / total) * log2(count / total)
+        if KEY == "ME":
             minority = min(minority, count)
             returnNumber = minority / total
             if returnNumber == 1:
                 returnNumber = 0
-        elif KEY == "GI":
+        if KEY == "GI":
             returnNumber += (count / total) ** 2
     if KEY == "GI":
         returnNumber = 1 - returnNumber
@@ -182,99 +215,10 @@ def unknownProcess(data):
             line[15] = majority
 
 
-def processData(data, weightList):
-    attributes = {}
-    labels = {}
-    for row in range(len(data)):
-        weight = weightList[row - 1]
-        for col in range(len(data[row])):
-            cell = data[row][col]
-            if row == 0:  # header, get each atrribute name
-                if col != len(data[row]) - 1:
-                    attributes.update({cell: {}})  # attribute names
-            else:
-                labelValue = data[row][len(data[row]) - 1]  # current label value
-                if col == len(data[row]) - 1:  # update label
-                    if labelValue in labels:
-                        labels.update({labelValue: labels[labelValue] + weight})
-                    else:
-                        labels.update({labelValue: weight})
-                else:  # update attribute
-                    attribute = attributes[data[0][col]]
-                    if (
-                        cell in attribute and labelValue in attribute[cell]
-                    ):  # update exist label value
-                        attribute[cell].update(
-                            {labelValue: attribute[cell][labelValue] + weight}
-                        )
-                    elif cell in attribute:  # add new label value
-                        attribute[cell].update({labelValue: weight})
-                    else:  # add new attribute value
-                        attribute.update({cell: {labelValue: weight}})
-    return attributes, labels
-
-
-def ID3(S, Attributes, Label, Depth, KEY, weight):
-    bestAttribute = bestToSplit(Label, Attributes, KEY)
-    childList = []  # branch
-    root = Node({bestAttribute: Label})  # current root node
-    root.branch = childList
-    for attribute in Attributes[bestAttribute]:  # split each attribute value
-        subData = []
-        subWeight = []
-        for row in range(len(S)):
-            line = S[row].copy()
-            if row == 0:  # header
-                line.remove(bestAttribute)
-                subData.append(line)
-            else:  # subdata
-                index = list(Attributes.keys()).index(bestAttribute)
-                if line[index] == attribute:
-                    del line[index]
-                    subData.append(line)
-                    subWeight.append(weight[row - 1])
-        subAttributes, subLabels = processData(subData, subWeight)  # process new data
-        child = Node({attribute: subLabels})
-        childList.append(child)  # connect each child node to current
-        if len(subLabels.values()) > 1 and (Depth - 1) != 0:
-            temp = []  # continue branch on child node
-            child.branch = temp
-            temp.append(ID3(subData, subAttributes, subLabels, Depth - 1, KEY, weight))
-    return root
-
-
-def getA_t(Node, data, header, weight):
-    error = 0
-    for i in range(len(data)):
-        line = data[i]
-        prediction = getPrediction(Node, line, header)
-        actual = line[len(line) - 1]
-        if prediction != actual:
-            error += weight[i]
-    return (1 / 2) * math.log((1 - error) / error)
-
-
-def changeWeight(weight, a_t, data):
-    assert len(weight) == len(data)
-    total = 0
-    for i in range(len(data)):
-        line = data[i]
-        prediction = getPrediction(Root, line, header)
-        actual = line[len(line) - 1]
-        if prediction != actual:
-            weight[i] = weight[i] * math.exp(a_t)
-        else:
-            weight[i] = weight[i] * math.exp(-a_t)
-        total += weight[i]
-    for i in range(len(data)):
-        weight[i] = weight[i] / total
-    return weight
-
-
-def predictionError(data, header, rootList, a_tList):
+def predictionError(data, header, rootList):
     count = 0
     for line in data:
-        prediction = getAdaBoostPrediction(line, rootList, a_tList, header)
+        prediction = getBaggingPrediction(rootList, line, header)
         actual = line[len(line) - 1]
         if prediction != actual:
             count += 1
@@ -291,15 +235,14 @@ def treePredictionError(Node, data, header):
     return count / len(data)
 
 
-def getAdaBoostPrediction(line, rootList, a_tList, header):
+def getBaggingPrediction(rootList, line, header):
     totalVote = {}
     for i in range(len(rootList)):
         root = rootList[i]
-        a_t = a_tList[i]
         vote = getPrediction(root, line, header)
         if vote not in totalVote:
             totalVote[vote] = 0
-        totalVote[vote] += a_t
+        totalVote[vote] += 1
     max = float("-inf")
     returnVote = ""
     for vote, number in totalVote.items():
@@ -309,61 +252,112 @@ def getAdaBoostPrediction(line, rootList, a_tList, header):
     return returnVote
 
 
-# set up
-version = "BANK"
-data, testdata = getData(version)
-processBank(data)
-processBank(testdata)
-header = getHeader(version)
-data.insert(0, header)
+def listAverage(l):
+    return sum(l) / len(l)
+
+
+def getVariance(predictionList, average, count):
+    total = 0
+    for prediction in predictionList:
+        total += (prediction - average) ** 2
+    return math.sqrt(total / count)
+
+
+def ID3(S, Attributes, Label, Depth, KEY):
+    bestAttribute = bestToSplit(Label, Attributes, KEY)
+    childList = []  # branch
+    root = Node({bestAttribute: Label})  # current root node
+    root.branch = childList
+    for attribute in Attributes[bestAttribute]:  # split each attribute value
+        subData = []
+        for row in range(len(S)):
+            line = S[row].copy()
+            if row == 0:  # header
+                line.remove(bestAttribute)
+                subData.append(line)
+            else:  # subdata
+                index = list(Attributes.keys()).index(bestAttribute)
+                if line[index] == attribute:
+                    del line[index]
+                    subData.append(line)
+        subAttributes, subLabels = processData(subData)  # process new data
+        child = Node({attribute: subLabels})
+        childList.append(child)  # connect each child node to current
+        if len(subLabels.values()) > 1 and (Depth - 1) != 0:
+            temp = []  # continue branch on child node
+            child.branch = temp
+            temp.append(ID3(subData, subAttributes, subLabels, Depth - 1, KEY))
+    return root
 
 
 def main():
-    while True:
-        try:
-            print("Enter exit to exit")
-            print("Enter: Start interger, End integer, Step.")
-            get = input("Example: 0, 10, 1 \n")
-            if get.upper() == "EXIT":
-                exit(0)
-            inputData = get.strip().split(",")
-            start = int(inputData[0])
-            end = int(inputData[1]) + 1
-            step = int(inputData[2])
-        except Exception:
-            print("input not valid \n")
-            continue
-        for T in range(start, end, step):
-            # set weight for each line
-            weight = [1 / len(data[1:])] * len(data[1:])
-            rootList = []
-            a_tList = []
-            for j in range(T):
-                attributes, labels = processData(data, weight)
-                Root = ID3(data, attributes, labels, 1, "IG", weight)
-                # print(Root)
-                A_t = getA_t(Root, data[1:], header, weight)
-                weight = changeWeight(weight, A_t, data[1:])
-                rootList.append(Root)
-                a_tList.append(A_t)
+    # set up
+    version = "BANK"
+    data, testdata = getData(version)
+    processBank(data)
+    processBank(testdata)
+    header = getHeader(version)
+    data.insert(0, header)
 
-            error = predictionError(data[1:], header, rootList, a_tList)
-            print(str(T) + " Training Error: " + str(error))
-            testError = predictionError(testdata, header, rootList, a_tList)
-            print(str(T) + " Test Error: " + str(testError))
-        for tree in range(len(rootList)):
-            treeError = treePredictionError(rootList[tree], data[1:], header)
-            print(
-                "Decision stump "
-                + str(tree + 1)
-                + " tree Training Error: "
-                + str(treeError)
-            )
-            treeTestError = treePredictionError(rootList[tree], testdata, header)
-            print(
-                "Decision stump "
-                + str(tree + 1)
-                + " tree Test Error: "
-                + str(treeTestError)
-            )
-        break
+    treeList = []
+    baggedList = []
+
+    for T in range(0, 10):
+        rootList = []
+        for j in range(500):
+            sample = []
+            dataCopy = data.copy()
+            sample.insert(0, header)
+            for j in range(1000):
+                pick = random.randint(1, len(dataCopy) - 2)
+                sample.append(dataCopy[pick])
+                dataCopy.remove(dataCopy[pick])
+            attributes, labels = processData(sample)
+            Root = ID3(sample, attributes, labels, 16, "IG")
+            rootList.append(Root)
+        baggedList.append(rootList)
+        treeList.append(rootList[0])
+
+    treeBiasList = []
+    baggedBiasList = []
+    treeVarianceList = []
+    baggedVarianceList = []
+    for line in dataCopy:
+        treePredictionList = []
+        baggedPredictionList = []
+        for tree in treeList:
+            if getPrediction(tree, line, header) == "yes":
+                treePredictionList.append(1)
+            else:
+                treePredictionList.append(0)
+        for bagged in baggedList:
+            if getBaggingPrediction(bagged, line, header) == "yes":
+                baggedPredictionList.append(1)
+            else:
+                baggedPredictionList.append(0)
+        temp = 0
+        if line[-1] == "yes":
+            temp = 1
+        treeBiasList.append((listAverage(treePredictionList) - temp) ** 2)
+        treeVarianceList.append(
+            getVariance(treePredictionList, listAverage(treePredictionList), 10)
+        )
+        baggedBiasList.append((listAverage(baggedPredictionList) - temp) ** 2)
+        baggedVarianceList.append(
+            getVariance(baggedPredictionList, listAverage(baggedPredictionList), 10)
+        )
+    print("Single trees average bias term: " + str(listAverage(treeBiasList)))
+    print("Single trees average variance term: " + str(listAverage(treeVarianceList)))
+    print(
+        "Single trees average general squared error: "
+        + str(listAverage(treeBiasList) + listAverage(treeVarianceList))
+    )
+    print("Bagged predictors average bias term: " + str(listAverage(baggedBiasList)))
+    print(
+        "Bagged predictors average variance term: "
+        + str(listAverage(baggedVarianceList))
+    )
+    print(
+        "Bagged predictors average general squared error: "
+        + str(listAverage(baggedBiasList) + listAverage(baggedVarianceList))
+    )
