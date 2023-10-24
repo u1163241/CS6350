@@ -254,7 +254,7 @@ def getA_t(Node, data, header, weight):
     return (1 / 2) * math.log((1 - error) / error)
 
 
-def changeWeight(weight, a_t, data):
+def changeWeight(Root, weight, a_t, data):
     assert len(weight) == len(data)
     total = 0
     for i in range(len(data)):
@@ -343,7 +343,7 @@ def main():
                 Root = ID3(data, attributes, labels, 1, "IG", weight)
                 # print(Root)
                 A_t = getA_t(Root, data[1:], header, weight)
-                weight = changeWeight(weight, A_t, data[1:])
+                weight = changeWeight(Root, weight, A_t, data[1:])
                 rootList.append(Root)
                 a_tList.append(A_t)
 
