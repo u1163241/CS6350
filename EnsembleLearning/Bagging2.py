@@ -302,7 +302,8 @@ def main():
     treeList = []
     baggedList = []
 
-    for T in range(0, 10):
+    print("Processing...")
+    for T in range(0, 100):
         rootList = []
         for j in range(500):
             sample = []

@@ -322,35 +322,30 @@ def main():
     while True:
         try:
             print("Enter exit to exit")
-            print("Enter: Start interger, End integer, Step.")
-            get = input("Example: 0, 10, 1 \n")
+            get = input("Please enter number for T\n")
             if get.upper() == "EXIT":
                 exit(0)
-            inputData = get.strip().split(",")
-            start = int(inputData[0])
-            end = int(inputData[1]) + 1
-            step = int(inputData[2])
+            T = int(get)
         except Exception:
             print("input not valid \n")
             continue
-        for T in range(start, end, step):
-            # set weight for each line
-            weight = [1 / len(data[1:])] * len(data[1:])
-            rootList = []
-            a_tList = []
-            for j in range(T):
-                attributes, labels = processData(data, weight)
-                Root = ID3(data, attributes, labels, 1, "IG", weight)
-                # print(Root)
-                A_t = getA_t(Root, data[1:], header, weight)
-                weight = changeWeight(Root, weight, A_t, data[1:])
-                rootList.append(Root)
-                a_tList.append(A_t)
+        # set weight for each line
+        weight = [1 / len(data[1:])] * len(data[1:])
+        rootList = []
+        a_tList = []
+        for T in range(T):
+            attributes, labels = processData(data, weight)
+            Root = ID3(data, attributes, labels, 1, "IG", weight)
+            # print(Root)
+            A_t = getA_t(Root, data[1:], header, weight)
+            weight = changeWeight(Root, weight, A_t, data[1:])
+            rootList.append(Root)
+            a_tList.append(A_t)
 
             error = predictionError(data[1:], header, rootList, a_tList)
-            print(str(T) + " Training Error: " + str(error))
+            print(str(T + 1) + " Training Error: " + str(error))
             testError = predictionError(testdata, header, rootList, a_tList)
-            print(str(T) + " Test Error: " + str(testError))
+            print(str(T + 1) + " Test Error: " + str(testError))
         for tree in range(len(rootList)):
             treeError = treePredictionError(rootList[tree], data[1:], header)
             print(
@@ -359,11 +354,11 @@ def main():
                 + " tree Training Error: "
                 + str(treeError)
             )
-            treeTestError = treePredictionError(rootList[tree], testdata, header)
-            print(
-                "Decision stump "
-                + str(tree + 1)
-                + " tree Test Error: "
-                + str(treeTestError)
-            )
+        treeTestError = treePredictionError(rootList[tree], testdata, header)
+        print(
+            "Decision stump "
+            + str(tree + 1)
+            + " tree Test Error: "
+            + str(treeTestError)
+        )
         break

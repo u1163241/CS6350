@@ -312,9 +312,10 @@ def main():
     treeList = []
     forestList = []
 
-    for T in range(0, 10):
+    print("Processing...")
+    for T in range(0, 100):
         rootList = []
-        for i in range(100):
+        for i in range(500):
             sample = []
             dataCopy = data.copy()
             sample.insert(0, header)

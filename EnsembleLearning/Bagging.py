@@ -281,31 +281,26 @@ def main():
     while True:
         try:
             print("Enter exit to exit")
-            print("Enter: Start interger, End integer, Step.")
-            get = input("Example: 0, 10, 1 \n")
+            get = input("Please enter number for T\n")
             if get.upper() == "EXIT":
                 exit(0)
-            inputData = get.strip().split(",")
-            start = int(inputData[0])
-            end = int(inputData[1]) + 1
-            step = int(inputData[2])
+            T = int(get)
         except Exception:
             print("input not valid \n")
             continue
-        for T in range(start, end, step):
-            rootList = []
-            for j in range(T):
-                sample = []
-                sample.insert(0, header)
-                for j in range(len(data) - 1):
-                    pick = random.randint(1, len(data) - 2)
-                    sample.append(data[pick])
-                attributes, labels = processData(sample)
-                Root = ID3(sample, attributes, labels, 16, "IG")
-                rootList.append(Root)
+        rootList = []
+        for T in range(T):
+            sample = []
+            sample.insert(0, header)
+            for j in range(len(data) - 1):
+                pick = random.randint(1, len(data) - 2)
+                sample.append(data[pick])
+            attributes, labels = processData(sample)
+            Root = ID3(sample, attributes, labels, 16, "IG")
+            rootList.append(Root)
 
             error = predictionError(data[1:], header, rootList)
-            print(str(T) + " Training Error: " + str(error))
+            print(str(T + 1) + " Training Error: " + str(error))
             testError = predictionError(testdata, header, rootList)
-            print(str(T) + " Test Error: " + str(testError))
+            print(str(T + 1) + " Test Error: " + str(testError))
         break

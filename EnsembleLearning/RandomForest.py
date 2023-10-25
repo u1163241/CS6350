@@ -303,37 +303,31 @@ def main():
     while True:
         try:
             print("Enter exit to exit")
-            print("Enter: Start interger, End integer, Step.")
-            get = input("Example: 0, 10, 1 \n")
+            get = input("Please enter number for T\n")
             if get.upper() == "EXIT":
                 exit(0)
-            inputData = get.strip().split(",")
-            start = int(inputData[0])
-            end = int(inputData[1]) + 1
-            step = int(inputData[2])
-            featureSize = input("Feature Size, pick from 2,4,6\n")
-            featureSize = int(featureSize)
+            T = int(get)
+            featureSize = int(input("Please select feature size from 2,4,6\n"))
             if featureSize != 2 and featureSize != 4 and featureSize != 6:
                 print("wrong feature size")
                 continue
         except Exception:
             print("input not valid \n")
             continue
-        for T in range(start, end, step):
-            rootList = []
+        rootList = []
 
-            for i in range(T):
-                sample = []
-                sample.insert(0, header)
-                for i in range(len(data) - 1):
-                    pick = random.randint(1, len(data) - 2)
-                    sample.append(data[pick])
-                attributes, labels = processData(sample)
-                Root = RandTreeLearn(sample, attributes, labels, 16, "IG", featureSize)
-                rootList.append(Root)
+        for T in range(T):
+            sample = []
+            sample.insert(0, header)
+            for i in range(len(data) - 1):
+                pick = random.randint(1, len(data) - 2)
+                sample.append(data[pick])
+            attributes, labels = processData(sample)
+            Root = RandTreeLearn(sample, attributes, labels, 16, "IG", featureSize)
+            rootList.append(Root)
 
             error = predictionError(data[1:], header, rootList)
-            print(str(T) + " Training Error: " + str(error))
+            print(str(T + 1) + " Training Error: " + str(error))
             testError = predictionError(testdata, header, rootList)
-            print(str(T) + " Test Error: " + str(testError))
+            print(str(T + 1) + " Test Error: " + str(testError))
         break
