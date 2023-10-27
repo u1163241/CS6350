@@ -64,7 +64,7 @@ while True:
     print("Training Errors:")
     for i in range(1, int(depth) + 1):
         Root = ID3(data, attributes, labels, i, split)
-        # print(Root)
+        print(Root)
         print(str(i) + ": " + str(predictionError(Root, traindata, header)))
     print("Test Errors:")
     for i in range(1, int(depth) + 1):
