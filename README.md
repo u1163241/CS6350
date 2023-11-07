@@ -8,3 +8,6 @@
 
 ## Linear Regression
 ### Use ./run.sh to start then follow the instructions.
+
+## Perceptron
+### Use ./run.sh to start then follow the instructions.
