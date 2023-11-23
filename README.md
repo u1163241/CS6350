@@ -1,4 +1,4 @@
-# ”This is a machine learning library developed by Di Wu for CS6350 in University of Utah.
+# This is a machine learning library developed by Di Wu for CS6350 in University of Utah.
 
 ## Decision Tree
 ### Use ./run.sh to start then follow the instructions.
@@ -10,4 +10,7 @@
 ### Use ./run.sh to start then follow the instructions.
 
 ## Perceptron
+### Use ./run.sh to start then follow the instructions.
+
+## SVM
 ### Use ./run.sh to start then follow the instructions.
