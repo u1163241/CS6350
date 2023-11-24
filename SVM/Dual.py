@@ -25,9 +25,9 @@ def motifyData(data):
 
 def product(weightList, line):
     total = 0
-    for i in range(len(weightList)):
+    for i in range(len(weightList) - 1):
         total += weightList[i] * float(line[i])
-    return total
+    return total + weightList[-1]
 
 
 def getError(data, weightList):
