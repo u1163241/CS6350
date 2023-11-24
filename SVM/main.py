@@ -1,11 +1,15 @@
 import SubGradient
 import Dual
+import Gaussian
 
 print("Enter s for Sub-Gradient")
-get = input("Enter d for dual \n").upper()
+print("Enter d for dual SVM")
+get = input("Enter g for Gaussian kern\n").upper()
 if get == "S":
     SubGradient.main()
 elif get == "D":
-    print("Not Finished")
+    Dual.main()
+elif get == "G":
+    Gaussian.main()
 else:
     print("Wrong input.")
