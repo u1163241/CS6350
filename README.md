@@ -14,3 +14,6 @@
 
 ## SVM
 ### Use ./run.sh to start then follow the instructions.
+
+## Neural Networks
+### Use ./run.sh to start then follow the instructions.
