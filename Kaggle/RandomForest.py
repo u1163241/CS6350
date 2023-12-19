@@ -223,32 +223,51 @@ def RandTreeLearn(S, Attributes, Label, Depth, KEY, featureSize):
 # set up
 data, testdata = getData()
 for line in data:
-    del line[6]
+    del line[13]
+    del line[12]
+    del line[11]
+    del line[10]
     del line[4]
     del line[2]
-    del line[1]
+    del line[0]
+print(data[0])
 for line in testdata:
-    del line[7]
+    del line[14]
+    del line[13]
+    del line[12]
+    del line[11]
     del line[5]
     del line[3]
-    del line[2]
+    del line[1]
+    del line[0]
+print(testdata[0])
 header = data[0]
+
+list1 = []
+list0 = []
+# balance data
+for line in data:
+    if line[-1] == str(1):
+        list1.append(line)
+    else:
+        list0.append(line)
+for line in list1:
+    data.append(line)
+    data.append(line)
 
 rootList = []
 for T in range(50):
     sample = []
     sample.insert(0, header)
-    for i in range(len(data) - 1):
+    for i in range(len(data)):
         pick = random.randint(1, len(data) - 2)
         sample.append(data[pick])
     attributes, labels = processData(sample)
-    Root = RandTreeLearn(sample, attributes, labels, 100, "IG", 2)
+    Root = RandTreeLearn(sample, attributes, labels, 3, "IG", 3)
     rootList.append(Root)
 
     error = predictionError(data[1:], header, rootList)
     print(str(T + 1) + " Training Error: " + str(error))
-    # testError = predictionError(testdata[1:], header, rootList)
-    # print(str(T + 1) + " Test Error: " + str(testError))
 
 # ouput csv file
 predictionList = []
@@ -256,9 +275,7 @@ for i in range(len(testdata)):
     if i == 0:
         predictionList.append(["ID", "Prediction"])
         continue
-    # remove ID
     line = testdata[i]
-    del line[0]
     prediction = getBaggingPrediction(rootList, line, header)
     predictionList.append([i, prediction])
 path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Prediction.csv")
